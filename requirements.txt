@@ -9,3 +9,4 @@ unittest2
 coverage
 enum34
 jsonpickle
+traceback2
