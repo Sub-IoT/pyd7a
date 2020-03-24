@@ -142,7 +142,7 @@ class Parser(object):
     offset = self.parse_offset(s)
     length = Length.parse(s)
     data   = s.read("bytes:" + str(length.value))
-    return Data(offset=offset, data=map(ord,data))
+    return Data(offset=offset, data=[c for c in data])
 
   def parse_alp_return_status_action(self, b7, b6, s):
     if b7:
