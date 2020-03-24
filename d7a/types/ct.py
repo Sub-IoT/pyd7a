@@ -72,7 +72,7 @@ class CT(Validatable):
 
   @staticmethod
   def compress(value, ceil=True):
-    for i in xrange(8):
+    for i in range(8):
       if(value <= math.pow(4, i) * 31):
         mantissa = int(value / math.pow(4, i))
         remainder = value % math.pow(4, i)
