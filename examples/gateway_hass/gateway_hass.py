@@ -28,8 +28,12 @@ import traceback
 
 import time
 import json
-from examples.gateway_hass.custom_files.button_file import ButtonFile
+
+
+
 from examples.gateway_hass.custom_files.custom_files import CustomFiles
+from examples.gateway_hass.custom_files.button_file import ButtonFile
+from examples.gateway_hass.custom_files.pir_file import PirFile
 
 import paho.mqtt.client as mqtt
 
@@ -63,7 +67,7 @@ class Modem2Mqtt():
     self.mq.on_connect = self.on_mqtt_connect
     self.mq.on_publish = self.on_published
     # self.mq.on_message = self.on_mqtt_message
-    self.mq.username_pw_set("mqtt", "Be&FX&Rw9sFdr@8W")
+    self.mq.username_pw_set("shelly", "shelly_password")
 
     self.mq.connect(self.config.broker, 1883, 60)
     self.mq.loop_start()
@@ -127,6 +131,48 @@ class Modem2Mqtt():
         self.mq.publish(state_topic, 'ON' if (1 << parsedData.button_id) & parsedData.state.value else 'OFF')
 
         logging.info("published state: {} to topic {}".format('ON' if (1 << parsedData.button_id) & parsedData.state.value else 'OFF', state_topic))
+        
+        unique_voltage_id = '{}_voltage'.format(transmitterHexString)
+        battery_voltage_state_topic = 'homeassistant/sensor/{}/state'.format(unique_voltage_id)
+        battery_voltage_config_topic = 'homeassistant/sensor/{}/config'.format(unique_voltage_id)
+        battery_voltage_config = {
+          'device': device,
+          'name': 'Voltage',
+          'qos': 1,
+          'unique_id': unique_voltage_id,
+          'entity_category': 'diagnostic',
+          'state_topic': battery_voltage_state_topic,
+          'state_class': 'measurement',
+          'unit_of_measurement': 'mV',
+          'icon': 'mdi:sine-wave'
+        }
+        self.mq.publish(battery_voltage_config_topic, json.dumps(battery_voltage_config))
+        self.mq.publish(battery_voltage_state_topic, parsedData.battery_voltage)
+
+      if fileType.__class__ is PirFile:
+
+        device = {
+            'manufacturer': 'Kwiam',
+            'name': 'Push7_{}'.format(transmitterHexString),
+            'identifiers': [transmitterHexString],
+            # 'sw_version' : could read from version file
+        }
+
+        unique_id = '{}_pir'.format(transmitterHexString)
+        state_topic = 'homeassistant/button/{}/state'.format(parsedData.component, unique_id)
+        config_topic = 'homeassistant/{}/{}/config'.format(parsedData.component, unique_id)
+
+        config = {
+          'device': device,
+          # 'icon': we could choose a custom icon
+          # 'json_attributes_topic': ?
+          'name': 'Pir_state',
+          'qos': 1,
+          'unique_id': unique_id,
+          'state_topic': state_topic
+        }
+        self.mq.publish(config_topic, json.dumps(config))
+        self.mq.publish(state_topic, 'ON' if (parsedData.pir_state) else 'OFF')
         
         unique_voltage_id = '{}_voltage'.format(transmitterHexString)
         battery_voltage_state_topic = 'homeassistant/sensor/{}/state'.format(unique_voltage_id)

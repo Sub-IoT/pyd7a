@@ -23,30 +23,34 @@ from d7a.system_files.file import File
 # from examples.gateway_hass.custom_files.constants import CustomFileIds
 from .custom_files import CustomFileIds
 
-FILE_SIZE = 2
+FILE_SIZE = 3
 
 class PirFile(File, Validatable):
   SCHEMA = [{
+    "pir_state": Types.INTEGER(min=0, max=0xFF),
     "battery_voltage": Types.INTEGER(min=0, max=0xFFFF)
   }]
-  component = 'button'
+  component = 'binary_sensor'
 
-  def __init__(self, battery_voltage=0):
+  def __init__(self, pir_state=0, battery_voltage=0):
+    self.pir_state = pir_state
     self.battery_voltage = battery_voltage
     File.__init__(self, CustomFileIds.PIR.value, FILE_SIZE)
     Validatable.__init__(self)
 
   @staticmethod
   def parse(s, offset=0, length=FILE_SIZE):
-    battery_voltage = s.read("uint:16")
-    return PirFile(battery_voltage=battery_voltage)
+    pir_state = s.read("uint:8")
+    battery_voltage = s.read("uintle:16")
+    return PirFile(pir_state=pir_state, battery_voltage=battery_voltage)
 
   def __iter__(self):
+    yield self.pir_state
     for byte in bytearray(struct.pack(">H", self.battery_voltage)):
       yield byte
 
 
   def __str__(self):
-    return "battery_voltage={}".format(
-      self.battery_voltage
+    return "pir_state={}, battery_voltage={}".format(
+      self.pir_state, self.battery_voltage
     )
