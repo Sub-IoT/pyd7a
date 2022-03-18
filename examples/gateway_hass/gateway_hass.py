@@ -149,7 +149,7 @@ class Modem2Mqtt():
         self.mq.publish(battery_voltage_config_topic, json.dumps(battery_voltage_config))
         self.mq.publish(battery_voltage_state_topic, parsedData.battery_voltage)
 
-      if fileType.__class__ is PirFile:
+      elif fileType.__class__ is PirFile:
 
         device = {
             'manufacturer': 'Kwiam',
@@ -159,7 +159,7 @@ class Modem2Mqtt():
         }
 
         unique_id = '{}_pir'.format(transmitterHexString)
-        state_topic = 'homeassistant/button/{}/state'.format(parsedData.component, unique_id)
+        state_topic = 'homeassistant/{}/{}/state'.format(parsedData.component, unique_id)
         config_topic = 'homeassistant/{}/{}/config'.format(parsedData.component, unique_id)
 
         config = {
