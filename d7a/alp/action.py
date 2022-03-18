@@ -52,8 +52,8 @@ class Action(Validatable):
   def __str__(self):
     if isinstance(self.operation, ReturnFileData):
       # when reading a known system files we output the parsed data
-      if self.operation.systemfile_type != None and self.operation.file_data_parsed != None:
-        return "Received {} content: {}".format(self.operation.systemfile_type.__class__.__name__,
+      if self.operation.file_type != None and self.operation.file_data_parsed != None:
+        return "Received {} content: {}".format(self.operation.file_type.__class__.__name__,
                                                 self.operation.file_data_parsed)
 
     return str(self.operation)

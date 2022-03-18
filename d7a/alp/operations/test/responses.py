@@ -29,14 +29,14 @@ from d7a.alp.operands.file        import Data
 class TestReturnFileData(unittest.TestCase):
   def test_constructor_and_op_code(self):
     data = Data([0x01, 0x02, 0x03, 0x04])
-    rfd  = ReturnFileData(data)
+    rfd  = ReturnFileData(operand=data)
     self.assertEqual(rfd.op, 32)
     self.assertIs(rfd.operand, data)
     self.assertEqual(rfd.operand.length.value, 4)
   
   def test_byte_generation(self):
     data  = Data([0x01, 0x02, 0x03, 0x04])
-    rfd   = ReturnFileData(data)
+    rfd   = ReturnFileData(operand=data)
     bytes = bytearray(rfd)
     self.assertEqual(len(bytes), 7)
     self.assertEqual(bytes[0], int('00000000', 2)) # offset

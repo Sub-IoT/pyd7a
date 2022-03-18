@@ -44,9 +44,9 @@ from d7a.system_files.uid import UidFile
 from d7a.system_files.system_file_ids import SystemFileIds
 
 class Modem:
-  def __init__(self, device, baudrate, unsolicited_response_received_callback=None, rebooted_callback=None, skip_alp_parsing=False):
+  def __init__(self, device, baudrate, unsolicited_response_received_callback=None, rebooted_callback=None, skip_alp_parsing=False, custom_files_class=None):
     self.log = logging.getLogger(__name__)
-    self.parser = Parser(skip_alp_parsing)
+    self.parser = Parser(skip_alp_parsing, custom_files_class)
     self.config = {
       "device"   : device,
       "baudrate" : baudrate

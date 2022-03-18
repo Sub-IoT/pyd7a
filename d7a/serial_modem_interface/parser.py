@@ -38,12 +38,13 @@ class MessageType(enum.IntEnum):
 
 class Parser(object):
 
-  def __init__(self, skip_alp_parsing=False):
+  def __init__(self, skip_alp_parsing=False, custom_files_class=None):
     self.buffer = bytearray()
     self.skip_alp_parsing = skip_alp_parsing
     self.up_counter = 0
     self.down_counter = 0
     self.error_counter = 0
+    self.alp_parser = AlpParser(custom_files_class)
 
   def shift_buffer(self, start):
     self.buffer = self.buffer[start:]
@@ -108,7 +109,7 @@ class Parser(object):
 
             cmd = s.read("bytes:" + str(cmd_length))
           else:
-            cmd = AlpParser().parse(s, cmd_length)
+            cmd = self.alp_parser.parse(s, cmd_length)
 
         bits_parsed = s.pos
         self.shift_buffer(bits_parsed/8)

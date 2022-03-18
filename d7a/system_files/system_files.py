@@ -33,6 +33,8 @@ from d7a.system_files.user_authentication_key import UserAuthenticationKeyFile
 
 
 class SystemFiles:
+  enum_class = SystemFileIds
+
   files = {
     SystemFileIds.UID: UidFile(),
     SystemFileIds.FACTORY_SETTINGS: FactorySettingsFile(),

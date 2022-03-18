@@ -59,6 +59,8 @@ from d7a.alp.operations.file_management import CreateNewFile
 
 
 class Parser(object):
+  def __init__(self, custom_files_class = None):
+    self.custom_files_class = custom_files_class
 
   def parse(self, s, cmd_length):
     actions = []
@@ -125,7 +127,7 @@ class Parser(object):
     operand = self.parse_alp_return_file_data_operand(s)
     return RegularAction(group=b7,
                         resp=b6,
-                        operation=ReturnFileData(operand=operand))
+                        operation=ReturnFileData(custom_files_class=self.custom_files_class, operand=operand))
 
   def parse_alp_return_file_header_action(self, b7, b6, s):
     operand = FileHeaderOperand.parse(s)

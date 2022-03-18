@@ -25,35 +25,32 @@ from d7a.alp.operands.file_header import FileHeaderOperand
 from d7a.alp.operations.operation import Operation
 
 from d7a.alp.operands.file        import Data
-from d7a.alp.operands.offset import Offset
-from d7a.system_files.system_file_ids import SystemFileIds
 from d7a.system_files.system_files import SystemFiles
 
 
 class ReturnFileData(Operation):
-  def __init__(self, *args, **kwargs):
-    self.systemfile_type = None
+  def __init__(self, custom_files_class=None, *args, **kwargs):
+    self.file_type = None
     self.file_data_parsed = None
     self.op     = 32
     self.operand_class = Data
     super(ReturnFileData, self).__init__(*args, **kwargs)
-    self.try_parse_system_file()
+    self.try_parse_file(SystemFiles)
+    if custom_files_class is not None:
+      self.try_parse_file(custom_files_class)
 
-  def try_parse_system_file(self):
-    # when reading a known system files we store the parsed data and filename
+  def try_parse_file(self, file_class):
     try:
-      systemfile_type = SystemFiles().files[SystemFileIds(self.operand.offset.id)]
+      file_type = file_class().files[file_class().enum_class(int(self.operand.offset.id))]
     except:
       return
-    # if the file size is between allocated and original length, try to parse it
-    if (systemfile_type is not None) and (systemfile_type.length >= self.operand.length.value):
-      self.systemfile_type = systemfile_type
+    if (file_type is not None) and (file_type.length >= self.operand.length.value):
+      self.file_type = file_type
       try:
-        self.file_data_parsed = systemfile_type.parse(ConstBitStream(bytearray(self.operand.data)), self.operand.offset.offset.value, self.operand.length.value)
+        self.file_data_parsed = file_type.parse(ConstBitStream(bytearray(self.operand.data)), self.operand.offset.offset.value, self.operand.length.value)
       except:
-        self.systemfile_type = None
+        self.file_type = None
         self.file_data_parsed = None
-
 
 class ReturnFileHeader(Operation):
   def __init__(self, *args, **kwargs):
