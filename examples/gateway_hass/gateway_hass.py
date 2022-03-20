@@ -94,6 +94,24 @@ class Modem2Mqtt():
   def on_published(self, client, userdata, mid):
     logging.info("published message with id {} successfully".format(mid))
 
+  def gather_and_send_voltage(self, transmitter_id, device, file):
+    unique_voltage_id = '{}_voltage'.format(transmitter_id)
+    battery_voltage_state_topic = 'homeassistant/sensor/{}/state'.format(unique_voltage_id)
+    battery_voltage_config_topic = 'homeassistant/sensor/{}/config'.format(unique_voltage_id)
+    battery_voltage_config = {
+      'device': device,
+      'name': 'Voltage',
+      'qos': 1,
+      'unique_id': unique_voltage_id,
+      'entity_category': 'diagnostic',
+      'state_topic': battery_voltage_state_topic,
+      'state_class': 'measurement',
+      'unit_of_measurement': 'mV',
+      'icon': 'mdi:sine-wave'
+    }
+    self.mq.publish(battery_voltage_config_topic, json.dumps(battery_voltage_config))
+    self.mq.publish(battery_voltage_state_topic, file.battery_voltage)
+
   def on_command_received(self, cmd):
     try:
       transmitter = cmd.interface_status.operand.interface_status.addressee.id
@@ -107,50 +125,7 @@ class Modem2Mqtt():
       logging.info("Received {} content: {} from {}".format(fileType.__class__.__name__,
                                               parsedData, transmitterHexString))
 
-
-      if fileType.__class__ is ButtonFile:
-        unique_id = '{}_button{}'.format(transmitterHexString, parsedData.button_id)
-        state_topic = 'homeassistant/{}/{}/state'.format(parsedData.component, unique_id)
-        config_topic = 'homeassistant/{}/{}/config'.format(parsedData.component, unique_id)
-        device = {
-            'manufacturer': 'Kwiam',
-            'name': 'Push7_{}'.format(transmitterHexString),
-            'identifiers': [transmitterHexString],
-            # 'sw_version' : could read from version file
-        }
-        config = {
-          'device': device,
-          # 'icon': we could choose a custom icon
-          # 'json_attributes_topic': ?
-          'name': 'Button_{}'.format(parsedData.button_id),
-          'qos': 1,
-          'unique_id': unique_id,
-          'state_topic': state_topic
-        }
-        self.mq.publish(config_topic, json.dumps(config))
-        self.mq.publish(state_topic, 'ON' if (1 << parsedData.button_id) & parsedData.state.value else 'OFF')
-
-        logging.info("published state: {} to topic {}".format('ON' if (1 << parsedData.button_id) & parsedData.state.value else 'OFF', state_topic))
-        
-        unique_voltage_id = '{}_voltage'.format(transmitterHexString)
-        battery_voltage_state_topic = 'homeassistant/sensor/{}/state'.format(unique_voltage_id)
-        battery_voltage_config_topic = 'homeassistant/sensor/{}/config'.format(unique_voltage_id)
-        battery_voltage_config = {
-          'device': device,
-          'name': 'Voltage',
-          'qos': 1,
-          'unique_id': unique_voltage_id,
-          'entity_category': 'diagnostic',
-          'state_topic': battery_voltage_state_topic,
-          'state_class': 'measurement',
-          'unit_of_measurement': 'mV',
-          'icon': 'mdi:sine-wave'
-        }
-        self.mq.publish(battery_voltage_config_topic, json.dumps(battery_voltage_config))
-        self.mq.publish(battery_voltage_state_topic, parsedData.battery_voltage)
-
-      elif fileType.__class__ is PirFile:
-
+      if fileType.__class__ in [ButtonFile, PirFile]:
         device = {
             'manufacturer': 'Kwiam',
             'name': 'Push7_{}'.format(transmitterHexString),
@@ -158,57 +133,46 @@ class Modem2Mqtt():
             # 'sw_version' : could read from version file
         }
 
-        unique_id = '{}_pir'.format(transmitterHexString)
-        state_topic = 'homeassistant/{}/{}/state'.format(parsedData.component, unique_id)
-        config_topic = 'homeassistant/{}/{}/config'.format(parsedData.component, unique_id)
+        self.gather_and_send_voltage(transmitterHexString, device, parsedData)
 
-        config = {
-          'device': device,
-          # 'icon': we could choose a custom icon
-          # 'json_attributes_topic': ?
-          'name': 'Pir_state',
-          'qos': 1,
-          'unique_id': unique_id,
-          'state_topic': state_topic
-        }
-        self.mq.publish(config_topic, json.dumps(config))
-        self.mq.publish(state_topic, 'ON' if (parsedData.pir_state) else 'OFF')
-        
-        unique_voltage_id = '{}_voltage'.format(transmitterHexString)
-        battery_voltage_state_topic = 'homeassistant/sensor/{}/state'.format(unique_voltage_id)
-        battery_voltage_config_topic = 'homeassistant/sensor/{}/config'.format(unique_voltage_id)
-        battery_voltage_config = {
-          'device': device,
-          'name': 'Voltage',
-          'qos': 1,
-          'unique_id': unique_voltage_id,
-          'entity_category': 'diagnostic',
-          'state_topic': battery_voltage_state_topic,
-          'state_class': 'measurement',
-          'unit_of_measurement': 'mV',
-          'icon': 'mdi:sine-wave'
-        }
-        self.mq.publish(battery_voltage_config_topic, json.dumps(battery_voltage_config))
-        self.mq.publish(battery_voltage_state_topic, parsedData.battery_voltage)
+        if fileType.__class__ is ButtonFile:
+          unique_id = '{}_button{}'.format(transmitterHexString, parsedData.button_id)
+          state_topic = 'homeassistant/{}/{}/state'.format(parsedData.component, unique_id)
+          config_topic = 'homeassistant/{}/{}/config'.format(parsedData.component, unique_id)
+          
+          config = {
+            'device': device,
+            # 'icon': we could choose a custom icon
+            # 'json_attributes_topic': ?
+            'name': 'Button_{}'.format(parsedData.button_id),
+            'qos': 1,
+            'unique_id': unique_id,
+            'state_topic': state_topic
+          }
+          self.mq.publish(config_topic, json.dumps(config))
+          self.mq.publish(state_topic, 'ON' if (1 << parsedData.button_id) & parsedData.state.value else 'OFF')
 
+          logging.info("published Button state: {} to topic {}".format('ON' if (1 << parsedData.button_id) & parsedData.state.value else 'OFF', state_topic))
 
+        elif fileType.__class__ is PirFile:
+          unique_id = '{}_pir'.format(transmitterHexString)
+          state_topic = 'homeassistant/{}/{}/state'.format(parsedData.component, unique_id)
+          config_topic = 'homeassistant/{}/{}/config'.format(parsedData.component, unique_id)
 
-      # data = cmd.actions[0].operation.operand.data
-      # logging.info("Command received: binary ALP (size {})".format(len(data)))
+          config = {
+            'device': device,
+            # 'icon': we could choose a custom icon
+            # 'json_attributes_topic': ?
+            'name': 'Pir_state',
+            'qos': 1,
+            'unique_id': unique_id,
+            'state_topic': state_topic
+          }
+          self.mq.publish(config_topic, json.dumps(config))
+          self.mq.publish(state_topic, 'ON' if (parsedData.pir_state) else 'OFF')
 
-      # temperature = (data[0] * 0x100 + data[1]) / 10.0
-      # result_temperature = {'active': 'ON', 'Temperature': temperature}
-      # result_json_temperature = json.dumps(result_temperature)
+          logging.info("published Pir state: {} to topic {}".format('ON' if (parsedData.pir_state) else 'OFF', state_topic))
 
-      # led_status = data[2] != 0
-      # result_led_status = {'state': 'ON' if led_status else 'OFF'}
-      # result_json_led_status = json.dumps(result_led_status)
-
-      # logging.info("Gotten temperature {} and led is {}".format(temperature, "on" if led_status else "off"))
-
-      # #pass temperature and led status to seperate topics. This can also be done to the same topic
-      # self.mq.publish(self.mqtt_topic_temperature, result_json_temperature)
-      # self.mq.publish(self.mqtt_topic_led_status, result_json_led_status)
     except (AttributeError, IndexError):
       # probably an answer on downlink we don't care about right now
       return
