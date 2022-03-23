@@ -49,8 +49,9 @@ class Modem2Mqtt():
                            default="/dev/ttyACM0")
     argparser.add_argument("-r", "--rate", help="baudrate for serial device", type=int, default=115200)
     argparser.add_argument("-v", "--verbose", help="verbose", default=False, action="store_true")
-    argparser.add_argument("-b", "--broker", help="mqtt broker hostname",
-                             default="homeassistant.local")
+    argparser.add_argument("-b", "--broker", help="mqtt broker hostname", default="homeassistant.local")
+    argparser.add_argument("-u", "--user", help="mqtt username", required=True)
+    argparser.add_argument("-p", "--password", help="mqtt password", required=True)
 
     self.config = argparser.parse_args()
     configure_default_logger(self.config.verbose)
@@ -67,7 +68,7 @@ class Modem2Mqtt():
     self.mq.on_connect = self.on_mqtt_connect
     self.mq.on_publish = self.on_published
     # self.mq.on_message = self.on_mqtt_message
-    self.mq.username_pw_set("shelly", "shelly_password")
+    self.mq.username_pw_set(self.config.user, self.config.password)
 
     self.mq.connect(self.config.broker, 1883, 60)
     self.mq.loop_start()
@@ -107,7 +108,8 @@ class Modem2Mqtt():
       'state_topic': battery_voltage_state_topic,
       'state_class': 'measurement',
       'unit_of_measurement': 'mV',
-      'icon': 'mdi:sine-wave'
+      'icon': 'mdi:sine-wave',
+      'retain': True
     }
     self.mq.publish(battery_voltage_config_topic, json.dumps(battery_voltage_config))
     self.mq.publish(battery_voltage_state_topic, file.battery_voltage)
@@ -147,7 +149,8 @@ class Modem2Mqtt():
             'name': 'Button_{}'.format(parsedData.button_id),
             'qos': 1,
             'unique_id': unique_id,
-            'state_topic': state_topic
+            'state_topic': state_topic,
+            'retain': True
           }
           self.mq.publish(config_topic, json.dumps(config))
           self.mq.publish(state_topic, 'ON' if (1 << parsedData.button_id) & parsedData.state.value else 'OFF')
@@ -166,7 +169,8 @@ class Modem2Mqtt():
             'name': 'Pir_state',
             'qos': 1,
             'unique_id': unique_id,
-            'state_topic': state_topic
+            'state_topic': state_topic,
+            'retain': True
           }
           self.mq.publish(config_topic, json.dumps(config))
           self.mq.publish(state_topic, 'ON' if (parsedData.pir_state) else 'OFF')
