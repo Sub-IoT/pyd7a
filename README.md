@@ -67,3 +67,9 @@ A parser for frames used by the serial console interface by Sub-IoT-Stack nodes
 ### Sub-IoT Modem interface
 
 Allows to use a serial connected Sub-IoT-Stack node as a modem. By sending ALP commands you can access the node's filesystem, or use the node's DASH7 interface to access the filesystem of nodes in the network.
+
+## Examples
+
+### Gateway_hass
+
+A gateway script for connecting a dash7 gateway to a running Home Assistant instance using MQTT.

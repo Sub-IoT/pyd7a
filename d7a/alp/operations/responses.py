@@ -39,9 +39,9 @@ class ReturnFileData(Operation):
     if custom_files_class is not None:
       self.try_parse_file(custom_files_class)
 
-  def try_parse_file(self, file_class):
+  def try_parse_file(self, files_class):
     try:
-      file_type = file_class().files[file_class().enum_class(int(self.operand.offset.id))]
+      file_type = files_class().files[files_class.enum_class(int(self.operand.offset.id))]
     except:
       return
     if (file_type is not None) and (file_type.length >= self.operand.length.value):
