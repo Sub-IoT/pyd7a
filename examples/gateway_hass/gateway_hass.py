@@ -108,11 +108,10 @@ class Modem2Mqtt():
       'state_topic': battery_voltage_state_topic,
       'state_class': 'measurement',
       'unit_of_measurement': 'mV',
-      'icon': 'mdi:sine-wave',
-      'retain': True
+      'icon': 'mdi:sine-wave'
     }
-    self.mq.publish(battery_voltage_config_topic, json.dumps(battery_voltage_config))
-    self.mq.publish(battery_voltage_state_topic, file.battery_voltage)
+    self.mq.publish(battery_voltage_config_topic, json.dumps(battery_voltage_config), retain=True)
+    self.mq.publish(battery_voltage_state_topic, file.battery_voltage, retain=True)
 
   def on_command_received(self, cmd):
     try:
@@ -149,11 +148,10 @@ class Modem2Mqtt():
             'name': 'Button_{}'.format(parsedData.button_id),
             'qos': 1,
             'unique_id': unique_id,
-            'state_topic': state_topic,
-            'retain': True
+            'state_topic': state_topic
           }
-          self.mq.publish(config_topic, json.dumps(config))
-          self.mq.publish(state_topic, 'ON' if (1 << parsedData.button_id) & parsedData.state.value else 'OFF')
+          self.mq.publish(config_topic, json.dumps(config), retain=True)
+          self.mq.publish(state_topic, 'ON' if (1 << parsedData.button_id) & parsedData.state.value else 'OFF', retain=True)
 
           logging.info("published Button state: {} to topic {}".format('ON' if (1 << parsedData.button_id) & parsedData.state.value else 'OFF', state_topic))
 
@@ -169,11 +167,10 @@ class Modem2Mqtt():
             'name': 'Pir_state',
             'qos': 1,
             'unique_id': unique_id,
-            'state_topic': state_topic,
-            'retain': True
+            'state_topic': state_topic
           }
-          self.mq.publish(config_topic, json.dumps(config))
-          self.mq.publish(state_topic, 'ON' if (parsedData.pir_state) else 'OFF')
+          self.mq.publish(config_topic, json.dumps(config), retain=True)
+          self.mq.publish(state_topic, 'ON' if (parsedData.pir_state) else 'OFF', retain=True)
 
           logging.info("published Pir state: {} to topic {}".format('ON' if (parsedData.pir_state) else 'OFF', state_topic))
 
