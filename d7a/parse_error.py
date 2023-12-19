@@ -17,4 +17,5 @@
 # limitations under the License.
 #
 
-class ParseError(Exception): pass
+class ParseError(Exception):
+    pass

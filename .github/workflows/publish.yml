@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+    tags:  [ "*" ]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+    - name: Set up PDM
+      uses: pdm-project/setup-pdm@v3
+    - name: Install dependencies
+      run: pdm sync 
+    - name: Build and publish
+      run: |
+        pdm build
+        pdm publish
+
+

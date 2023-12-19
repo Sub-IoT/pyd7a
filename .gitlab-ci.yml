@@ -1,15 +1,22 @@
-image: python:3.8
+variables:
+  DEFAULT_PYTHON: "3.9"
 
 stages:
   - test
+  - publish
+
+before_script:
+  - pip install pdm
+  - pdm install
 
 unit-test:
   stage: test
+  parallel:
+    matrix:
+      - PYTHON_VERSION: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+  image: docker.io/python:$PYTHON_VERSION
   script:
-    - python3 -m pip install pytest
-    - python3 -m pip install -r requirements.txt
-    - cd test
-    - PYTHONPATH="../" pytest --junitxml=../unittest-result.xml
+    - pdm run test
   artifacts:
     when: always
     paths:
